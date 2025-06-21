@@ -1,0 +1,355 @@
+---
+title: "dataR_01_intro"
+author: "Peter Hahn"
+format:
+  revealjs:
+    embed-resources: true
+    auto-stretch: true
+    theme: [default, mystyle]
+editor: visual
+---
+
+```{r}
+#| echo: false
+#| message: false
+library(here)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+# Einführung in die Datenanalyse mit R
+
+![intro](./images/atfirst.png)
+
+All [Artwork by \@allison_horst](https://twitter.com/allison_horst)
+
+## Teilnehmer
+
+![Who are you?](./images/rlearners.png)
+
+## Me
+
+![Dozent](./images/teacher.png)
+
+## Vulpius Klinik
+
+![Vulpe](./images/vulpius.png)
+
+## Handchirurgie
+
+![Kahnbein](./images/kahnbein.jpg)
+
+##  {.scrollable}
+
+![LinkedIn](./images/linkedin.jpg) 
+
+## Info Medium and github
+
+@kphahn57\
+https://phahn57.github.io
+
+## Erwartungen
+
+![intro](./images/erwartung.png)
+
+## Use Case
+
+Klinik Reporting
+
+# Install R and R Studio
+
+[CRAN](https://cran.r-project.org/). https://cran.r-project.org/
+
+[IDE](https://posit.co/download/rstudio-desktop/) https://posit.co/download/rstudio-desktop/
+
+## RStudio IDE
+
+![IDE](./images/ide.jpg)
+
+## Customize IDE
+
+::: incremental
+-   Tools - Global Options
+-   Save workspace : Never
+-   Code editing Tab
+-   Code formating styler
+:::
+
+## Project
+
+![IDE](./images/project.png)\
+
+## Struktur
+
+![IDE](./images/project_structure.png)
+
+## Console
+
+::: incremental
+3 + 3\
+2 \^ 4
+:::
+
+# Make it reproducible
+
+## Make a new quarto document
+
+File - New File - Quarto
+
+## RMarkdown
+
+/##
+
+/\`\`\` `{r}`
+
+/\`\`\`
+
+/\*\* \*\*
+
+## Useful shortcuts
+
+-   option shift K : Keyboard shortcuts
+-   command option I : insert chunk
+-   option - : assignment operator
+-   control shift M : pipe
+
+## options
+
+::: incremental
+-   eval: TRUE
+-   echo: TRUE
+-   message: TRUE
+-   warning: TRUE
+-   fig.width\
+:::
+
+## Chunk options
+
+{r, label = my_label, echo = FALSE, message = FALSE, warning = FALSE}
+
+## Knitr
+
+![intro](./images/knitr.png) Dynamic report generation with R
+
+## Knit
+
+html vs pdf.\
+install.packages('tinytex').\
+tinytex::install_tinytex() \# install TinyTeX
+
+## knitr::opts
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, messages = FALSE, warning = FALSE)
+```
+
+# Die Pinguine
+
+![](./images/penguins.png) \## Bill length and depth
+
+![](./images/culmen_depth.png)
+
+## Code
+
+::: incremental
+-   library(tidyverse)
+-   library(palmerpenguins)
+-   library(ggthemes)
+-   penguins
+-   glimpse(penguins)
+-   view(penguins)
+:::
+
+## Documentation
+
+Future self will thank you\
+Dokumentiere den Code
+
+## Das Ziel
+
+![Ziel](./images/chart_wanted.png)
+
+## Plotting_1
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(data = penguins)
+```
+
+## Plotting_2
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+)
+```
+
+## Plotting_3
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point()
+```
+
+## Plotting_4
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)
+) +
+  geom_point()
+```
+
+## Add smooth
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  geom_point() +
+        geom_smooth(method = "lm")
+        
+```
+
+## local vs global
+
+``` {.r code-line-numbers="6,14"}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  geom_point() +
+        geom_smooth(method = "lm")
+        
+        
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(mapping = aes(color = species)) +
+        geom_smooth(method = "lm")
+```
+
+## result
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(mapping = aes(color = species)) +
+        geom_smooth(method = "lm")
+```
+
+## simplify
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(
+  penguins,
+  aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species)) +
+        geom_smooth(method = "lm")
+```
+
+## Labelling the plot
+
+::: incremental
+-   search in help
+-   lab...
+:::
+
+## Categorical variable distributions
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(penguins, aes(x = species)) +
+  geom_bar()
+```
+
+## numerical variable distribution
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 200)
+```
+
+## binwidth ?
+
+## alternative
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_density()
+```
+
+## numerical and categorical I
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(penguins, aes(x = body_mass_g, color = species)) +
+  geom_density(linewidth = 0.75)
+```
+
+## numerical and categorical II
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(penguins, aes(x = species, body_mass_g)) +
+  geom_boxplot()
+```
+
+## numerical and categorical III
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(penguins, aes(x = species, body_mass_g)) +
+  geom_violin()
+```
+
+## numerical and categorical IV
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggplot(penguins, aes(x = species, body_mass_g)) +
+  geom_violin() + geom_jitter(width = 0.1, aes(color = species))
+```
+
+:::::::

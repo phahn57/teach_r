@@ -1,0 +1,268 @@
+---
+title: "dataR_05"
+author: "Peter Hahn"
+format:
+  revealjs:
+    embed-resources: true
+    theme: [default, mystyle]
+editor: visual
+---
+
+# Functions and Packages
+
+```{r}
+#| echo: false
+#| message: false
+library(tidyverse)
+library(nycflights23)
+library(tsibble)
+library(devtools)
+library(roxygen2)
+```
+
+## Warum Funktionen?
+
+-   Wiederverwendbarkeit (reuse)
+-   Lesebarkeit (readability)
+-   Modularität
+
+## Wenn Du etwas mehr als zweimal machst
+
+mache eine Funktion
+
+## Funktionen {.scrollable}
+
+df \<- tibble(\
+a = rnorm(5),\
+b = rnorm(5),\
+c = rnorm(5),\
+d = rnorm(5),\
+)
+
+## sinnvoll=
+
+df \|\> mutate(\
+a = (a - min(a, na.rm = TRUE)) /\
+(max(a, na.rm = TRUE) - min(a, na.rm = TRUE)),\
+b = (b - min(a, na.rm = TRUE)) /\
+(max(b, na.rm = TRUE) - min(b, na.rm = TRUE)),\
+c = (c - min(c, na.rm = TRUE)) /\
+(max(c, na.rm = TRUE) - min(c, na.rm = TRUE)),\
+d = (d - min(d, na.rm = TRUE)) /\
+(max(d, na.rm = TRUE) - min(d, na.rm = TRUE)),\
+)
+
+## Skelett
+
+X = (X - min(X, na.rm = TRUE)) / \
+(max(X, na.rm = TRUE) - min(X, na.rm = TRUE))
+
+was macht die Funktion? \## base function
+
+name \<- function(arguments) { body }
+
+## function
+
+normalize \<-\
+function(X) {  (X - min(X, na.rm = TRUE)) / \
+(max(X, na.rm = TRUE) - min(X, na.rm = TRUE))\
+}
+
+## clamp
+
+clamp \<- function(x, min, max). \
+{ case_when( x \< min \~ min, x \> max \~ max, .default = x ) }\
+clamp(1:10, min = 3, max = 7)
+
+## Übungen
+
+Schreiben Sie Funktionen: mean(!is.na(x))\
+mean(!is.na(y)) ...
+
+```         
+    x/sum(x, na.rm = TRUE)   
+    y/sum(y, na.rm = TRUE)
+```
+
+## problem
+
+grouped_mean \<- function(df, group_var, mean_var)\
+ {\
+df \|\> group_by(group_var) \|\>\
+summarize(mean(mean_var))\
+}
+
+grouped_mean(mtcars, "cyl", "mpg")
+
+## data masking in tidyverse
+
+base R: \
+starwars\[starwars$homeworld == "Naboo" & starwars$species == "Human", ,\] 
+
+tidyverse:  \
+starwars %\>% filter(homeworld == "Naboo", species == "Human")
+
+## solution embracing
+
+grouped_mean \<- function(df, group_var, mean_var) {\
+df \|\> group_by({{group_var}}) \|\> \
+summarize(mean({{mean_var}})) }
+
+grouped_mean(mtcars, cyl, mpg)
+
+## plotting
+
+plot_penguins \<- function(data, x, y, color){\
+ggplot( data = data, mapping = aes(x = {{x}}, y = {{y}},\
+color = {{color}}) ) + geom_point()\
+}
+
+library(palmerpenguins)\
+plot_penguins(penguins, flipper_length_mm, body_mass_g, species)
+
+# package
+
+## Automatisiere Jahr,Monat,Quartal
+
+flight_data \<- flight_data \|\>\
+select(flight,origin,dest,time_hour) \|\> \
+mutate(weekday = wday(time_hour, label = TRUE)) \|\>\
+mutate(month = month(time_hour, label = TRUE)) \|\>\
+mutate(quart = quarter(time_hour))
+
+## Was
+
+brauchen wir für eine gute Funktion?
+
+## Ideen
+
+## erweitern
+
+make_date \<-\
+function(df, date_var){}...
+
+## package basics
+
+library(devtools)\
+create_package("\~/Documents/r_projekt/???")
+
+## name?
+
+There are three formal requirements:
+
+-   The name can only consist of letters, numbers, and periods, i.e., ..
+-   It must start with a letter.
+-   It cannot end with a period. search CRAN
+
+## Name
+
+## name-check
+
+pak:pkg_name_check("mudate")
+
+## create package
+
+create_package("\~/Documents/r_projekt/mudate")
+
+## git optional
+
+use_git()
+
+## save code
+
+.R in directory R use_r("mudate_jmq")
+
+## edit
+
+##code mudate_jmq \<- function(df, date_var) {\
+df \|\> mutate(jahr = year({{date_var}})) \|\>\
+mutate(monat = month({{date_var}})) \|\> mutate(quartal = quart({{date_var}}))\
+}
+
+## load all
+
+load_all()
+
+## make a tribble with dates
+
+name-data.csv
+
+## read_csv
+
+Delimiter: "," chr (3): id, icd, gebdat dbl (2): bp1, bp2 date (1): aufnahme
+
+## view df
+
+## test how it works
+
+f \<- df \|\> mudate_jmq(date_var = aufnahme)
+
+## view df again
+
+## global environment
+
+exists("mudate_jmq", where = globalenv(), inherits = FALSE)
+
+## check
+
+execute check() in the shell
+
+## DESCRIPTION
+
+look into
+
+## Author
+
+## ORCID
+
+## Title
+
+## Description
+
+## License
+
+use_mit_license()
+
+## Documentation
+
+## go to R/mudate_jmq
+
+Code-insert roxygen skeleton
+
+## document()
+
+## check()
+
+## install()
+
+## restart R
+
+## install
+
+library(mudate)
+
+## testhat ??
+
+## dependencies
+
+use_package("tidyverse")
+
+## geht es besser?
+
+gebdat?\
+chr(18-04-1957)
+
+## chr to date?
+
+## ISO8601
+
+-   3 April 2025\
+-   2025-04-03\
+-   3 April 2025 18:00\
+-   2025-04-03 18:00
+
+## Lösung?
+
+## 
+
+mutate(date = case_when( bp1 \< 130 \~ "niedrig", bp1 \>= 130 & bp1 \< 140 \~ "grenzwertig", bp1 \>= 140 \~ "hoch" )

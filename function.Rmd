@@ -1,0 +1,20 @@
+---
+title: "Untitled"
+author: "Peter Hahn"
+date: "2025-04-30"
+output: html_document
+---
+
+```{r}
+mudate_jmq  <- function(df, date_var) {  
+df |>   mutate(jahr = year({{date_var}})) |>    
+        mutate(monat = month({{date_var}})) |> 
+        mutate(quartal = quarter({{date_var}}))        
+        }
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r, echo = FALSE}
+df <- df |> mudate_jmq(date_var = aufnahme)
+```

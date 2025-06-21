@@ -1,0 +1,631 @@
+---
+title: "dataR_07"
+author: "Peter Hahn"
+format:
+  revealjs:
+    embed-resources: true
+    theme: [default, mystyle]
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(GGally)
+library(ggthemes)
+library(forcats)
+library(leaflet)
+library(geojsonsf)
+```
+
+# Evolution of a visualization
+
+## Data
+
+https://github.com/phahn57/evoviz/blob/0870e09500d57f9d5b497c08585dd8e4de680fce/online.csv
+
+```{r}
+germany <- geojson_sf("../data/plz-5stellig.geojson")
+```
+
+## load locally
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online <- read_csv("../data/online.csv")
+```
+
+## How to analyse before plotting?
+
+## skim
+
+```{r}
+skimr::skim(online)
+```
+
+## simple boxplot
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        #filter(alter < 100)  |>    
+        ggplot(aes(abt, alter)) +    
+        geom_boxplot()
+```
+
+## Was verbessern?
+
+::: incremental
+-   Ideen?
+-   Daten
+-   background
+-   order
+-   axis label
+-   color
+:::
+
+## simple boxplot Daten
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        #filter(alter < 100)  |>    
+        ggplot(aes(abt, alter)) +    
+        geom_boxplot()
+```
+
+## background
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(abt, alter)) +    
+        geom_boxplot() +   
+        theme_clean()
+```
+
+## order
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter)) +       
+        geom_boxplot() +   
+        theme_clean()
+```
+
+## Axis
+
+![axes](./images/axes.png)
+
+## Name axis
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+             ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter)) +      
+        geom_boxplot() +   
+        xlab("Abteilung") + ylab("Alter, Jahre") +   
+        theme_clean()
+```
+
+## Color
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot() +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_clean()
+```
+
+## Info??
+
+#\| echo: true #\| code-fold: true #\| code-summary: "code" https://colourcontrast.cc/
+
+## color palette and information
+
+#\| echo: true #\| code-fold: true #\| code-summary: "code"
+
+```{r}
+abpalette <- c(arthr = "#E69F00", clar = "#E69F00", feet = "#009E73",hand= "#56B4E9", hip = "#E69F00", knee= "#E69F00",
+shoulder = "#0072B2", spine = "#D55E00", children = "#CC79A7")
+```
+
+## with palette
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot() +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_clean() +    
+        scale_fill_manual(values = abpalette)
+```
+
+## remove legend
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot(show.legend = FALSE) +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette)
+```
+
+## Titel
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot(show.legend = FALSE) + 
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette)
+```
+
+## Abteilungen umbennen
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online <- online |>    
+        mutate(abteilung = case_when(
+                abt == "hand" ~ "Handchirurgie",
+                abt == "feet" ~ "Fußchirurgie",
+                abt == "shoulder" ~ "Schulterchirurgie",
+                abt == "arthr" ~ "Arthroskopie",
+                abt == "spine" ~ "kons. Wirbelsäule",
+                abt == "hip" ~ "Hüftendoprothetik",
+                abt == "knee" ~ "Knieendoprothetik",
+                abt == "clar" ~ "Clarius"
+        ))
+```
+
+## Resultat
+
+```{r}
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abteilung, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot(show.legend = FALSE) + 
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette)
+```
+
+## legende ist nicht schön
+
+## Lösung
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abteilung, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot(show.legend = FALSE) + 
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette) +
+        coord_flip()
+```
+
+## Reihenfolge
+
+```{r}
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median, .desc = TRUE), 
+                y = alter, fill = abt)) +    
+        geom_boxplot(show.legend = FALSE) + 
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette) +
+        coord_flip()
+```
+
+## Aufgabe
+
+Fügen Sie die Anzahl der Patienten pro Abteilung hinzu
+
+## Eigene Tabelle
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online_rel <- read_csv("../data/online_rel.csv")
+```
+
+## mit ONline Buchungen
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot(show.legend = FALSE) + 
+        geom_col(data = online_rel, aes(x = abt, y = rel_onl, fill = abt), show.legend = FALSE) +
+        xlab("Abteilung") + ylab("Alter") +  
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +          theme_minimal() +    
+        scale_fill_manual(values = abpalette)
+
+```
+
+## Overlapping
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_boxplot(show.legend = FALSE) + 
+        geom_col(data = online_rel,   
+                 aes(x = abt,   
+                     y = rel_onl,   
+                     fill = abt),   
+                 show.legend = FALSE,   
+                 alpha =0.5) +
+        xlab("Abteilung") + ylab("Alter") +  
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") + 
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette)
+
+```
+
+## Violin ?
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(   
+                x = fct_reorder(abt, alter, .fun  = median), 
+                y = alter, fill = abt)) +    
+        geom_violin(show.legend = FALSE) + 
+        geom_col(data = online_rel,   
+                 aes(x = abt,   
+                     y = rel_onl,   
+                     fill = abt),   
+                 show.legend = FALSE,   
+                 alpha =0.5) +
+        xlab("Abteilung") + ylab("Alter") +  
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") + 
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette)
+
+```
+
+## Erstellen sie ein Histogramm der Altersverteilung
+
+pro Abteilung
+
+## Histogram pro Abteilung
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(alter)) +    
+        geom_histogram(aes(fill = abt)) + 
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +   
+        xlab("Abteilung") + ylab("Alter") +   
+        theme_minimal() +    
+        scale_fill_manual(values = abpalette)
+```
+
+## Histogram pro Abteilung einzeln
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(alter)) +    
+        geom_histogram(aes(fill = abt),show.legend = FALSE, binwidth = 5) + 
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +   
+        xlab("Abteilung") + ylab("Anzahl") +   
+        theme_clean() +    
+        scale_fill_manual(values = abpalette) +   
+        facet_wrap(.~abt)
+```
+
+## Alternative zum Histogram?
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+online  |>     
+        filter(alter < 100)  |>    
+        ggplot(aes(alter)) +    
+        geom_density(aes(fill = abt),show.legend = FALSE, binwidth = 5) + 
+        labs(title = "Online-Daten",   
+             subtitle = "Altersverteilung nach Abteilung") +   
+        xlab("Abteilung") + ylab("Density") +   
+        theme_clean() +    
+        scale_fill_manual(values = abpalette) +   
+        facet_wrap(.~abt)
+```
+
+## Geodaten
+
+library(leaflet)
+
+## maps
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+library(leaflet)
+
+m <- leaflet() %>%
+        addTiles() %>%  # Add default OpenStreetMap map tiles
+        setView(9.0807,49.2244, zoom=10)
+m  # Print the map
+```
+
+## Postleitzahlen mit Geodaten
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat <- read_csv("../data/germ_lat_long.csv")
+```
+
+## Ziel
+
+m = leaflet(data = geo_dat)\|\>\
+addTiles() \|\>\
+addCircleMarkers( **\~long, \~lat,** radius=\~nn/10 , #color=\~ifelse(data\$nn\>0 , "red", "orange"), stroke = TRUE, fillOpacity = 0.2 #popup = \~as.character(name) )
+
+## view
+
+```{r}
+view(geo_dat)
+```
+
+## Zerlegen Sie die Koordinaten
+
+15 Minuten
+
+## step 1
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat <- janitor::clean_names(geo_dat)
+
+
+geo_dat <- geo_dat |> 
+        mutate(k)
+        mutate(lat_long = str_remove(koordinaten,"Germany")) |>
+        select(-koordinaten)
+```
+
+## step 2
+
+```{r eval=FALSE}
+geo_dat <- geo_dat |> separate_wider_delim(lat_long," ",names = c("latitude","longitude"))
+```
+
+## Wo liegt das Problem
+
+## mal schauen
+
+```{r}
+skimr::skim(geo_dat)
+```
+
+## Lösung
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat <- geo_dat |> tidyr::drop_na()
+```
+
+## step 2
+
+```{r eval = FALSE}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat <- geo_dat |> separate_wider_delim(lat_long," ",names = c("latitude","longitude"))
+```
+
+## Nächtes Problem
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat[1,3]
+```
+
+## Zwei extra Schritte
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat <- geo_dat |>    
+        mutate(lat_long = str_replace_all(lat_long,"\\t"," ")) |>    
+        mutate(lat_long = str_trim(lat_long))
+```
+
+## nochmal step 2
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat <- geo_dat |> separate_wider_delim(lat_long," ",names = c("lat","long")) |> 
+        mutate(lat = as.numeric(lat), long = as.numeric(long))
+```
+
+## Wert hinzufügen
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+geo_dat <- geo_dat |> mutate(nn = sample(1:100, nrow(geo_dat)))
+
+```
+
+## Ergebnis
+
+```{r}
+m = leaflet(data = geo_dat) %>%
+   addTiles() %>%
+   addCircleMarkers(
+      ~long, ~lat, 
+      radius=~nn/10 , 
+      #color=~ifelse(data$nn>0 , "red", "orange"),
+      stroke = TRUE, 
+      fillOpacity = 0.2
+      #popup = ~as.character(name)
+   ) 
+m
+
+```
+
+# Tabellen
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+tab <- online |> group_by(abteilung) |> 
+        summarize(mean_age = mean(alter, na.rm = TRUE ),
+                  median_age = median(alter, na.rm = TRUE))
+tab
+```
+
+## better
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+library(gt)
+tab |> gt()
+```
+
+## Deutsche Kommas
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+library(gt)
+tab |> gt() |> fmt_number(dec_mark =",")
+```
+
+## better 3
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+library(gt)
+tab |> gt() |>   
+        tab_header(title = "Samedi Buchungen",
+                   subtitle = "Mean und Median" ) |> 
+        fmt_number(dec_mark =",")
+```
+
+## alternative gt_summary()
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+library(gtsummary)
+online |> group_by(abt) |> 
+        tbl_summary()
+```

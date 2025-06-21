@@ -1,0 +1,99 @@
+---
+title: "llm_06"
+author: "Peter Hahn"
+date: "2025-05-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## libraries
+```{r}
+library(tidyverse)
+library(ellmer)
+```
+
+## What's necessary
+local installation of ollama
+
+## chat object
+```{r}
+chat <- chat_ollama(
+  model = "gemma3",
+  system_prompt = "You are a friendly but terse assistant.",
+)
+```
+
+```{r}
+chat$chat("which language mostly influenced R")
+```
+
+```{r}
+chat$chat(
+  content_image_url("https://www.r-project.org/Rlogo.png"),
+  "Can you explain this logo?"
+)
+```
+## programmatic
+```{r}
+my_function <- function() {
+  chat <- chat_ollama(
+    model = "gemma3",
+    system_prompt = "You are a friendly but terse assistant.",
+  )
+  chat$chat("Is R a functional programming language?")
+}
+my_function()
+
+```
+
+## code generation
+```{r}
+question <- "How can I compute the mean and median of variables a, b, c, and so on, all the way up to z, grouped by age and sex."
+code <- chat$chat(question)
+```
+
+## chat object
+```{r}
+chat <- chat_ollama(
+  model = "gemma3",
+  system_prompt = "You are an expierenced R programmer who prefers the tidyverse friendly",
+)
+```
+
+## code generation
+```{r}
+question <- "How can I compute the mean and median of variables a, b, c, and so on, all the way up to z, grouped by age and sex."
+code <- chat$chat(question)
+```
+
+```{r}
+ingredients <- "
+  ¾ cup (150g) dark brown sugar
+  2 large eggs
+  ¾ cup (165g) sour cream
+  ½ cup (113g) unsalted butter, melted
+  1 teaspoon vanilla extract
+  ¾ teaspoon kosher salt
+  ⅓ cup (80ml) neutral oil
+  1½ cups (190g) all-purpose flour
+  150g plus 1½ teaspoons sugar
+"
+```
+
+```{r}
+instruct_json <- "
+  You're an expert baker who also loves JSON. I am going to give you a list of
+  ingredients and your job is to return nicely structured JSON. Just return the
+  JSON and no other commentary.
+"
+
+chat <- chat_ollama(
+        model = "gemma3",
+        system_promp= instruct_json)
+chat$chat(ingredients)
+```
+
+## structured data

@@ -1,0 +1,330 @@
+---
+title: "slides_06_llm"
+author: "Peter Hahn"
+format:
+  revealjs:
+    embed-resources: true
+    scrollable: true
+    theme: [default]
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(ellmer)
+library(gander)
+```
+
+## packages
+
+tidyverse\
+ellmer\
+gander\
+tidytext
+
+## Begin with simple NLP
+
+NLP Natural language processing
+
+## Data from
+
+https://www.kaggle.com/datasets/joykimaiyo18/linkedin-data-jobs-dataset?select=clean_jobs.csv
+
+## Load data (local)
+
+```{r}
+jobs <- read_csv("../data/jobs.csv")
+
+```
+
+## select company and description
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+jobs <- jobs |> select(company,description)
+```
+
+## How to use description?
+
+## tokenize
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+jobs_tokens <- jobs |> 
+  unnest_tokens(word, description) |> 
+  count(company, word, sort = TRUE) |> 
+  ungroup()
+jobs_tokens
+```
+
+## Alle sinnvoll?
+
+## stop_words
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+data("stop_words")
+```
+
+## stop_words anwenden
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_tokens <- jobs_tokens |> 
+  anti_join(stop_words)
+```
+
+## What can we do?
+
+::: incremental
+-   Top 10 words by company and title
+-   Top 10 words by company
+-   Top 10 words by title
+-   next
+-   Top 10 companies
+:::
+
+## top 10 companys
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_comp_10 <- jobs |> 
+  count(company, sort = TRUE) |> 
+  slice_max(n, n = 5)  
+
+jobs_comp_10 |> mutate(company = reorder(company, n)) |> 
+  ggplot(aes(company, n)) +
+    geom_col() +
+    coord_flip() +
+    labs(x = NULL, y = "Count")
+  
+```
+
+## Join jobs_tokens with jobs_comp_10
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_tokens_10 <- jobs_tokens |> 
+  inner_join(jobs_comp_10, by = "company")
+
+jobs_tokens_10 <- jobs_tokens_10 |> select(-n.y) |> 
+  rename(n = n.x)
+```
+
+## Kontrolle?
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+unique(jobs_tokens_10$company)
+```
+
+## Top 10 words by company and title
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+jobs_tokens_10 |> 
+  group_by(company) |> 
+  slice_max(n, n = 10) |> 
+  ungroup() |> 
+  arrange(company, desc(n)) 
+```
+
+## Bessere Darstellung ?
+
+## Pivot
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_tokens_wide <- jobs_tokens_10 |> 
+  pivot_wider(names_from = "word" ,names_prefix = "_",
+              values_from = n, values_fill = 0)
+jobs_tokens_wide
+```
+
+## Back to all (jobs_tokens)
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_tokens_w <- jobs_tokens |> 
+  pivot_wider(names_from = "word" ,names_prefix = "_",
+              values_from = n, values_fill = 0)
+jobs_tokens_w
+```
+
+## Object size?
+
+```{r}
+view(jobs_tokens_w)
+```
+
+## lobstr
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+lobstr::obj_size(jobs_tokens_w)
+```
+
+## Alternative?
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+## cast to dtm
+library(tm)
+jt_dtm <- jobs_tokens |> 
+  cast_dtm(company, word, n)
+jt_dtm
+```
+
+## Look inside
+
+```{r}
+str(jt_dtm)
+```
+
+## size?
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+lobstr::obj_size(jt_dtm)
+```
+
+## analyze bigrams
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_bigrams <- jobs |> 
+  unnest_tokens(bigram, description, token = "ngrams", n = 2) |> 
+  count(company, bigram, sort = TRUE) |>
+  ungroup()
+```
+
+## separate bigram into word1 and word2
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_bigrams_separated <- jobs_bigrams |> 
+  separate(bigram, into = c("word1", "word2"), sep = " ")
+
+jobs_bigrams_filtered <- jobs_bigrams_separated %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+jobs_bigram_counts <- jobs_bigrams_filtered %>% 
+  count(word1, word2, sort = TRUE)
+```
+
+## library(igraph)
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+library(igraph)
+library(ggraph)
+```
+
+## create graph
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+jobs_bigrams_graph <- jobs_bigram_counts |> 
+  filter(n > 10) |> 
+  graph_from_data_frame()
+```
+
+## plot graph using ggraph
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+ggraph(jobs_bigrams_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE) +
+  geom_node_point(size = 3, color = "lightblue") +
+  geom_node_text(aes(label = name), vjust = 1.8, size = 3) +
+  theme_void()
+```
+
+## Markov chains
+
+![markov](./images/markov1.png)
+
+# local models with ollama
+
+ollama local one llm e.g. gemma3
+
+## chat object
+
+chat \<- chat_ollama( model = "gemma3", system_prompt = "You are a friendly but terse assistant.", )
+
+## live chat
+
+live_console(chat)
+
+## Try
+
+::: incremental
+-   what is the capital city of...
+-   write a short poem about Mannheim
+-   ...
+:::
+
+## Interactive
+
+chat\$chat("what is the most important language preceeding R")
+
+## images
+
+chat\$chat( content_image_url("https://www.r-project.org/Rlogo.png"), "Can you explain this logo?" )
+
+## programmatic chat
+
+my_function \<- function() { chat \<- chat_openai( model = "gpt-4o-mini", system_prompt = "You are a friendly but terse assistant.", ) chat\$chat("Is R a functional programming language?") }
+
+# pal
+
+# mall

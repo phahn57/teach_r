@@ -1,0 +1,395 @@
+---
+title: "dataR_08"
+author: "Peter Hahn"
+format:
+  revealjs:
+    embed-resources: true
+    theme: [default, mystyle]
+editor: visual
+---
+
+# Evaluation
+
+10 Minuten
+
+# Quarto
+
+quarto.org
+
+## yaml header
+
+title: "file_08_quarto"\
+author: "Peter Hahn"\
+format: pdf\
+editor: visual
+
+## packages
+
+#\| label: load-packages\
+#\| include: false\
+\# Beispiele\
+library(tidyverse)\
+library(tidymodels)\
+library(readxl)\
+library(gt)\
+\## load packages
+
+```{r}
+#| label: load-packages
+#| include: false
+# Bespiele
+library(tidyverse)
+library(tidymodels)
+library(readxl)
+library(gt)
+```
+
+## Ausgabe PDF
+
+install.packages('tinytex'). .\
+tinytex::install_tinytex() \# install TinyTeX
+
+Achtung überprüfen ggfs. neu installieren
+
+## Kommentare
+
+#\| label: load_data\
+#\| include: true\
+#\| message: false
+
+## Wir erinnern uns
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+name_data <- read_csv("../data/name_data.csv")
+name_data
+```
+
+## separate with sep
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+df_delim <- name_data|> 
+separate(col = id, 
+         into = c("vorname", "name"),
+         sep =",")
+df_delim 
+```
+
+## part of string
+
+nur 3 Stellen der ICD
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+df_delim  |> mutate(icd = str_sub(icd, 1,3))
+```
+
+## Filter alle mit "M" in der ICD
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+df_delim  |> filter(str_detect(icd, "M"))
+```
+
+## Wandle in character in date
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+name_data <- name_data |> 
+  mutate(gebdat = dmy(gebdat))
+name_data
+```
+
+## our library??
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+library(mudate)
+```
+
+## use mudate
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+mudate_jmq(name_data,gebdat)
+```
+
+# Fragen?
+
+## Titanic
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic <- read_xls("../data/titanic3.xls")
+```
+
+## skim
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+skim_res <- skimr::skim(titanic)
+```
+
+## select sex,embarked,pclass,survived,sbsp,parch,fare
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic <- titanic |> select(sex,embarked,pclass,survived,sibsp,parch,fare)
+```
+
+## Exporatory data analysis (EDA)
+
+Wie angehen? Was trennen?
+
+## Numerische Variablen
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic |> 
+  select(where(is.numeric)) |> 
+  skimr::skim()
+
+```
+
+## Numerische Variablen grafisch
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+#| fig-cap: "Histogramm"
+
+titanic |> 
+  select(where(is.numeric)) |> 
+  pivot_longer(everything()) |> 
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_wrap(~name, scales = "free") +
+  theme_bw()
+```
+
+## Sind das alles numerische Variablen?
+
+## Kategorische Variablen
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic |> 
+  select(where(is.character)) |> 
+  skimr::skim()
+```
+
+## Kategorische Variablen grafisch
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic |> 
+  select(where(is.character)) |> 
+  pivot_longer(everything()) |> 
+  ggplot(aes(x = value)) +
+  geom_bar() +
+  facet_wrap(~name, scales = "free") +
+  theme_bw()
+```
+
+## Corrplot
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+#| fig-cap: "Korrelation"
+
+titanic |> 
+  select(where(is.numeric)) |> 
+         filter(!is.na(fare)) |>
+  cor() |> 
+  corrplot::corrplot(method = "circle", type = "lower", tl.col = "black")
+```
+
+## plot fare vs survived
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+titanic |> 
+  ggplot(aes(x = fare, y = survived)) +
+  geom_point() +
+  theme_bw()
+```
+
+## plot sex vs survived
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic |> 
+  ggplot(aes(x = sex, y = survived)) +
+  geom_point() +
+  theme_bw()
+ 
+
+```
+
+## Wie geht es besser?
+
+## Table vs percent male and female survived
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic %>%
+        group_by(survived, sex)  |> 
+        summarise(n = n())  |> 
+        pivot_wider(names_from = sex, values_from = n)  |> 
+        mutate(male_percent = male / (male + female) * 100) |> gt()
+
+```
+
+## Table embarked survived
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic %>% 
+        filter(!is.na(embarked)) %>%
+        group_by(survived, embarked) %>%
+        summarise(n = n()) %>%
+        pivot_wider(names_from = embarked, values_from = n) 
+```
+
+# Decision with ML
+
+??
+
+## survived as factor
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic <- titanic |> 
+  mutate(survived = factor(survived, levels = c(0, 1), labels = c("no", "yes")))
+```
+
+## Partition data
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+set.seed(123)
+titanic_split <- initial_split(titanic, prop = 0.7, strata = "survived")
+train <- training(titanic_split)
+test <- testing(titanic_split)
+```
+
+## recipe add step for survived as factor
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic_rec <- recipe(survived ~ ., data = train) |>
+        step_unknown(all_nominal_predictors()) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors()) |>
+  step_normalize(all_predictors())
+```
+
+## model
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic_model <- logistic_reg() |>
+  set_engine("glm") |>
+  set_mode("classification")
+```
+
+## workflow
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic_wf <- workflow() |>
+  add_recipe(titanic_rec) |>
+  add_model(titanic_model)
+```
+
+## fit
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic_fit <- titanic_wf |>
+  fit(data = train)
+```
+
+## predict
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic_pred <- titanic_fit |>
+  predict(new_data = test) |>
+  bind_cols(test)
+```
+
+## augment
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+
+titanic_pred <- titanic_fit |>
+  augment(new_data = test) 
+```
+
+## roc
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| code-summary: "code"
+titanic_pred %>% 
+  roc_curve(truth = survived, .pred_no) %>% 
+  autoplot()
+```
