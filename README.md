@@ -1,4 +1,5 @@
 ## Teaching data analysis using R at the DHBW in Mannheim 2025
+### QMD slides with revealjs
 This repository contains the materials for the course "Data Analysis with R" at the DHBW Mannheim. 
 The course is designed to introduce students to data analysis using R, covering both theoretical concepts and practical applications.
 
@@ -21,6 +22,9 @@ which summarise the content and can be used for your own experiments.
 - Visualising data, ggplot, gt
 - Quarto
 - Final thesis
+
+Some images are not included in the repository, as they are not freely available, or I am uncertain how to share them.
+
 
 <a href="https://creativecommons.org">Teaching data analysis using R</a> by <a href="https://creativecommons.org">Peter Hahn</a> is marked
 <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg"
